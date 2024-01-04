@@ -22,7 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'name', 'first_name', 'last_name', 'email', 'password', 'password_2', 'terms_accepted', 'dob', 'about_me',
+        fields = ('id', 'username', 'name', 'first_name', 'last_name', 'email', 'password', 'password_2', 'terms_accepted', 'dob', 'about_me',
                   'consumer', 'contributor', 'applied_contributor', 'approved_contributor', 'picture')
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5},
                         'password_2': {'write_only': True, 'min_length': 5},
@@ -53,7 +53,9 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'password': 'Passwords do not match'})
         validated_data['email'] = validated_data['email'].lower()
         email = validated_data.get('email')
-        validated_data['username'] = email
+        username = validated_data.get('username', None)
+        if not username:
+            validated_data['username'] = email
 
         # Set name based on first_name and last_name
         first_name = validated_data.get('first_name', '')
@@ -71,9 +73,12 @@ class UserSerializer(serializers.ModelSerializer):
         email = validated_data.get('email', None)
         if email:
             email = email.lower()
-            if User.objects.filter(email=email).exists() or User.objects.filter(username=email).exists():
+            if User.objects.filter(email=email).exists():
                 raise serializers.ValidationError({"Validation Error": 'User with this email address already exists.'})
-            validated_data['username'] = email
+        username = validated_data.get('username', None)
+        if username:
+            if User.objects.filter(username=username).exclude(pk=instance.pk).exists():
+                raise serializers.ValidationError({"Validation Error": 'User with this username already exists.'})
 
         first_name = validated_data.get('first_name', instance.first_name)
         last_name = validated_data.get('last_name', instance.last_name)

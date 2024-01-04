@@ -107,3 +107,16 @@ class UserViewSet(ModelViewSet):
         email_msg.content_subtype = "html"
         email_msg.send()
         return Response(status=status.HTTP_200_OK)
+
+
+    @action(detail=False, methods=['post'])
+    def invite_consumer(self, request):
+        recipient = request.data.get('recipient')
+        subject = "Blessn Invitation", 
+        message = """You have been invited to join the Blessn Community as a Consumer. Follow the link below to create
+                   an account now! <a href="www.blessn.com">www.blessn.com</a>"""
+        
+        email_msg = EmailMessage(subject, message, from_email=SENDGRID_EMAIL, to=[recipient])
+        email_msg.content_subtype = "html"
+        email_msg.send()
+        return Response(status=status.HTTP_200_OK)
