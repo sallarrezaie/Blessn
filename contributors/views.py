@@ -1,5 +1,4 @@
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
 from home.permissions import IsGetOrIsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 

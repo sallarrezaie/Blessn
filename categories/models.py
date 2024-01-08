@@ -1,4 +1,5 @@
 from django.db import models
+from contributors.models import Contributor
 
 
 class Category(models.Model):
@@ -10,3 +11,6 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+    def contributor_count(self):
+        return Contributor.objects.filter(category=self).count()

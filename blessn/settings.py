@@ -143,7 +143,7 @@ DATABASES = {
     }
 }
 
-if env.str("DATABASE_URL", "postgres://rkteiagaobbzvk:887b2ec4e205c113d3a654f2792e2339728f0f9fd40a9f5faf26796244230453@ec2-44-220-7-157.compute-1.amazonaws.com:5432/d3dt12v214rrgd"):
+if env.str("DATABASE_URL", default=None):
     DATABASES = {
         'default': env.db()
     }
@@ -225,17 +225,17 @@ REST_AUTH_REGISTER_SERIALIZERS = {
 AUTH_USER_MODEL = "users.User"
 
 EMAIL_HOST = env.str("EMAIL_HOST", "smtp.sendgrid.net")
-EMAIL_HOST_USER = env.str("SENDGRID_USERNAME", "apikey")
-EMAIL_HOST_PASSWORD = env.str("SENDGRID_PASSWORD", "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")
+EMAIL_HOST_USER = env.str("SENDGRID_USERNAME", "")
+EMAIL_HOST_PASSWORD = env.str("SENDGRID_PASSWORD", "")
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 
 # AWS S3 config
-AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID", "AKIA5S4JYJRUPSPXEF37")
-AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY", "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")
-AWS_STORAGE_BUCKET_NAME = env.str("AWS_STORAGE_BUCKET_NAME", "blessnbucket")
-AWS_STORAGE_REGION = env.str("AWS_STORAGE_REGION", "us-east-2")
+AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID", "")
+AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY", "")
+AWS_STORAGE_BUCKET_NAME = env.str("AWS_STORAGE_BUCKET_NAME", "")
+AWS_STORAGE_REGION = env.str("AWS_STORAGE_REGION", "")
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 
 USE_S3 = (
@@ -287,7 +287,7 @@ if GS_BUCKET_NAME:
     GS_DEFAULT_ACL = "publicRead"
 
 
-SENDGRID_EMAIL = env.str("SENDGRID_EMAIL", "sallar.rezaie@crowdbotics.com")
+SENDGRID_EMAIL = env.str("SENDGRID_EMAIL", "")
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_ALL_ORIGINS = True
@@ -302,3 +302,5 @@ REST_FRAMEWORK = {
    'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",
    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
+
+AWS_QUERYSTRING_AUTH = False
