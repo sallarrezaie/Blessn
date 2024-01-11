@@ -77,7 +77,8 @@ LOCAL_APPS = [
     'consumers',
     'contributors',
     'terms_and_conditions',
-    'privacy_policy'
+    'privacy_policy',
+    'socialauth'
 ]
 THIRD_PARTY_APPS = [
     'rest_framework',

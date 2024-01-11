@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 class User(AbstractUser):
     # First Name and Last Name do not cover name patterns
     # around the globe.
+    username = models.CharField(_("Username"), unique=False, max_length=255, blank=True, null=True)
     name = models.CharField(_("Name of User"), blank=True, null=True, max_length=255)
     first_name = models.CharField(_("First Name"), blank=True, max_length=255)
     last_name = models.CharField(_("Last Name"), blank=True, max_length=255)

@@ -24,4 +24,5 @@ router.register("privacy-policy", PrivacyPolicyViewSet, basename="privacy-policy
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("socials/", include(("socialauth.urls", "socialauth"), namespace="socialauth"))
 ]
