@@ -78,7 +78,9 @@ LOCAL_APPS = [
     'contributors',
     'terms_and_conditions',
     'privacy_policy',
-    'socialauth'
+    'socialauth',
+    'feedback',
+    'notifications'
 ]
 THIRD_PARTY_APPS = [
     'rest_framework',
@@ -305,3 +307,5 @@ REST_FRAMEWORK = {
 }
 
 AWS_QUERYSTRING_AUTH = False
+
+FCM_SERVER_KEY = env.str("FCM_SERVER_KEY", "")

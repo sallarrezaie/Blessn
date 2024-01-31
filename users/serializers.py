@@ -20,10 +20,12 @@ class UserSerializer(serializers.ModelSerializer):
     contributor = ContributorSerializer(required=False)
     password_2 = serializers.CharField(required=False)
 
+
     class Meta:
         model = get_user_model()
         fields = ('id', 'username', 'name', 'first_name', 'last_name', 'email', 'password', 'password_2', 'terms_accepted', 'dob', 'about_me',
-                  'consumer', 'contributor', 'applied_contributor', 'approved_contributor', 'picture')
+                  'consumer', 'contributor', 'applied_contributor', 'approved_contributor', 'picture', 'master_notification', 'in_app_notification', 
+                  'push_notification', 'email_notification','sms_notification', 'registration_id')
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5},
                         'password_2': {'write_only': True, 'min_length': 5},
                         'email': {'required': True},
@@ -113,6 +115,37 @@ class ResetPasswordSerializer(serializers.Serializer):
         style={'input_type': 'password'}
     )
     password_2 = serializers.CharField(
+        min_length=4,
+        write_only=True,
+        required=True,
+        style={'input_type': 'password'}
+    )
+
+    def validate(self, attrs):
+        pass1 = attrs.get('password_1')
+        pass2 = attrs.get('password_2')
+        if pass1 != pass2:
+            raise serializers.ValidationError({'detail': 'Passwords do not match'})
+        return super().validate(attrs)
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """
+    Custom serializer used to set the password for a User
+    """
+    password_1 = serializers.CharField(
+        min_length=4,
+        write_only=True,
+        required=True,
+        style={'input_type': 'password'}
+    )
+    password_2 = serializers.CharField(
+        min_length=4,
+        write_only=True,
+        required=True,
+        style={'input_type': 'password'}
+    )
+    current_password = serializers.CharField(
         min_length=4,
         write_only=True,
         required=True,

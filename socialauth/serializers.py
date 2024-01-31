@@ -128,6 +128,11 @@ class CustomAppleSocialLoginSerializer(SocialLoginSerializer):
 
         attrs["user"] = login.account.user
         user = attrs['user']
+
+        if not user.is_active:
+            raise serializers.ValidationError(
+                'This user has been deactivated. Please contact support for assistance.') 
+
         consumer, _ = Consumer.objects.get_or_create(user=user)
         if user.email and not user.username:
             user.username = user.email
@@ -155,6 +160,9 @@ class CustomSocialLoginSerializer(SocialLoginSerializer):
     def validate(self, attrs):
         attrs = super().validate(attrs)
         user = attrs['user']
+        if not user.is_active:
+            raise serializers.ValidationError(
+                'This user has been deactivated. Please contact support for assistance.') 
         consumer, _ = Consumer.objects.get_or_create(user=user)
         if user.email and not user.username:
             user.username = user.email

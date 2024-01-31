@@ -9,8 +9,10 @@ from home.api.v1.viewsets import (
 from users.viewsets import UserViewSet
 from contributors.views import ContributorPhotoVideoViewSet
 from categories.views import CategoryViewSet
+from feedback.views import FeedbackViewSet
 from terms_and_conditions.views import TermAndConditionViewSet
 from privacy_policy.views import PrivacyPolicyViewSet
+from notifications.views import NotificationViewSet
 
 router = DefaultRouter()
 router.register("signup", SignupViewSet, basename="signup")
@@ -18,8 +20,10 @@ router.register("login", LoginViewSet, basename="login")
 router.register("users", UserViewSet, basename="users")
 router.register("contributors/photo-video", ContributorPhotoVideoViewSet, basename="contributors/photo-video")
 router.register("categories", CategoryViewSet, basename="categories")
+router.register("feedback", FeedbackViewSet, basename="feedback")
 router.register("terms-and-conditions", TermAndConditionViewSet, basename="terms-and-conditions")
 router.register("privacy-policy", PrivacyPolicyViewSet, basename="privacy-policy")
+router.register("notifications", NotificationViewSet, basename="notifications")
 
 
 urlpatterns = [

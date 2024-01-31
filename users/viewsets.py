@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.hashers import check_password
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -16,7 +17,7 @@ from rest_framework.viewsets import ModelViewSet
 from blessn.settings import SENDGRID_EMAIL
 from home.utils import send_otp, auth_token, send_email
 from home.permissions import IsPostOrIsAuthenticated
-from .serializers import UserSerializer, ResetPasswordSerializer, CustomAuthTokenSerializer, OTPSerializer
+from .serializers import UserSerializer, ResetPasswordSerializer, CustomAuthTokenSerializer, OTPSerializer, ChangePasswordSerializer
 
 
 User = get_user_model()
@@ -50,12 +51,32 @@ class UserViewSet(ModelViewSet):
             return Response({'detail': "Password Updated Successfully"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def change_password(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            current_password = serializer.validated_data['current_password']
+            
+            # Check if the current password is correct
+            if not check_password(current_password, user.password):
+                return Response({'detail': "Current password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # If the current password is correct, proceed to set the new password
+            user.set_password(serializer.validated_data['password_1'])
+            user.save()
+            return Response({'detail': "Password Updated Successfully"}, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     # Login a User
     @action(detail=False, methods=['post'])
     def login(self, request, **kwargs):
         serializer = CustomAuthTokenSerializer(data=request.data, context = {'request':request})
         if serializer.is_valid():
             user = serializer.validated_data['user']
+            if not user.is_active:
+                return Response({'detail': 'This user has been deactivated. Please contact support for assistance.'}, status=status.HTTP_401_UNAUTHORIZED)
             token = auth_token(user)
             serializer = UserSerializer(user, context = {'request':request})
             return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_200_OK)
@@ -120,3 +141,16 @@ class UserViewSet(ModelViewSet):
         email_msg.content_subtype = "html"
         email_msg.send()
         return Response(status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'], permission_classes=[IsAuthenticated])
+    def deactivate_account(self, request):
+        user = request.user
+        user.is_active = False
+        user.save()
+        return Response({'detail': 'Account has been deactivated'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'], permission_classes=[IsAuthenticated])
+    def delete_account(self, request):
+        user = request.user
+        user.delete()
+        return Response({'detail': 'Account has been deleted'}, status=status.HTTP_200_OK)

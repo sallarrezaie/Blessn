@@ -20,6 +20,7 @@ class User(AbstractUser):
     activation_key = models.CharField(max_length=255, blank=True)
     applied_contributor = models.BooleanField(default=False)
     approved_contributor = models.BooleanField(default=False)
+    registration_id = models.CharField(max_length=500, blank=True)
 
     # Notification Settings
     master_notification = models.BooleanField(default=True)
@@ -28,6 +29,8 @@ class User(AbstractUser):
     email_notification = models.BooleanField(default=True)
     sms_notification = models.BooleanField(default=True)
 
+    USERNAME_FIELD = 'email'  # Use email as the login identifier
+    REQUIRED_FIELDS = []
 
     def get_absolute_url(self):
         return reverse("users:detail", kwargs={"username": self.username})
