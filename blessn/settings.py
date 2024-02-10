@@ -80,7 +80,11 @@ LOCAL_APPS = [
     'privacy_policy',
     'socialauth',
     'feedback',
-    'notifications'
+    'notifications',
+    'dropdowns',
+    'orders',
+    'payments',
+    'posts'
 ]
 THIRD_PARTY_APPS = [
     'rest_framework',
@@ -98,7 +102,8 @@ THIRD_PARTY_APPS = [
     'drf_yasg',
     'storages',
     'django_filters',
-    'corsheaders'
+    'corsheaders',
+    'djstripe'
 ]
 MODULES_APPS = get_modules()
 
@@ -309,3 +314,10 @@ REST_FRAMEWORK = {
 AWS_QUERYSTRING_AUTH = False
 
 FCM_SERVER_KEY = env.str("FCM_SERVER_KEY", "")
+
+BOOKING_FEE = env.str("BOOKING_FEE", "0")
+
+STRIPE_LIVE_MODE = env.str("STRIPE_LIVE_MODE", "false")
+STRIPE_LIVE_SECRET_KEY = env.str("STRIPE_LIVE_SECRET_KEY", "")
+STRIPE_TEST_SECRET_KEY = env.str("STRIPE_TEST_SECRET_KEY", "")
+CONNECTED_SECRET = env.str("CONNECTED_SECRET", "")

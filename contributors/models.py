@@ -17,6 +17,28 @@ class Contributor(models.Model):
         null=True,
         blank=True
     )
+    connect_account = models.ForeignKey(
+        'djstripe.Account',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="The Contributor's Stripe Connect Account object, if it exists"
+    )
+    normal_delivery_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+    fast_delivery_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+    same_day_delivery_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
 
 
 class ContributorPhotoVideo(models.Model):

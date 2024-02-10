@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password
+from django.db.models import Q
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -17,7 +18,9 @@ from rest_framework.viewsets import ModelViewSet
 from blessn.settings import SENDGRID_EMAIL
 from home.utils import send_otp, auth_token, send_email
 from home.permissions import IsPostOrIsAuthenticated
-from .serializers import UserSerializer, ResetPasswordSerializer, CustomAuthTokenSerializer, OTPSerializer, ChangePasswordSerializer
+from .serializers import UserSerializer, ResetPasswordSerializer, CustomAuthTokenSerializer, OTPSerializer, ChangePasswordSerializer, \
+    ExtendedUserSerializer
+from .models import Follow
 
 
 User = get_user_model()
@@ -154,3 +157,59 @@ class UserViewSet(ModelViewSet):
         user = request.user
         user.delete()
         return Response({'detail': 'Account has been deleted'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def follow(self, request, user_id):
+        user_to_follow = User.objects.get(pk=user_id)
+        follow, created = Follow.objects.get_or_create(follower=request.user, followed=user_to_follow)
+        if created:
+            return Response('You are now following this user.', status=status.HTTP_200_OK)
+        else:
+            return Response('You are already following this user.', status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def unfollow(self, request, user_id):
+        user_to_unfollow = User.objects.get(pk=user_id)
+        follow = Follow.objects.get(follower=request.user, followed=user_to_unfollow)
+        follow.delete()
+        return Response('You have unfollowed this user.', status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def list_following(self, request):
+        user_id = request.query_params.get('user_id')
+        search = request.query_params.get('search', None)
+        user = User.objects.get(id=user_id)
+
+        if search:
+            following_users = User.objects.filter(
+                Q(followers__follower=user) &
+                (
+                    Q(name__icontains=search) |
+                    Q(first_name__icontains=search) |
+                    Q(last_name__icontains=search)
+                )
+            ).distinct()
+        else:
+            following_users = User.objects.filter(following__follower=user).distinct()
+        serializer = ExtendedUserSerializer(following_users, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def list_followers(self, request):
+        user_id = request.query_params.get('user_id')
+        search = request.query_params.get('search', None)
+        user = User.objects.get(id=user_id)
+
+        if search:
+            followers = User.objects.filter(
+                Q(following__followed=user) &
+                (
+                    Q(name__icontains=search) |
+                    Q(first_name__icontains=search) |
+                    Q(last_name__icontains=search)
+                )
+            ).distinct()
+        else:
+            followers = User.objects.filter(following__followed=user).distinct()
+
+        serializer = ExtendedUserSerializer(followers, many=True, context={'request': request})
+        return Response(serializer.data)

@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model, authenticate
+from django.utils import timezone
+from datetime import timedelta
 
 from rest_framework import serializers
 
@@ -7,6 +9,7 @@ from contributors.serializers import ContributorSerializer
 from consumers.models import Consumer
 from consumers.serializers import ConsumerSerializer
 from home.utils import verifyOTP
+from posts.models import Post
 
 
 User = get_user_model()
@@ -102,6 +105,20 @@ class UserSerializer(serializers.ModelSerializer):
             user.applied_contributor = True
             user.save()
         return user
+
+
+class ExtendedUserSerializer(UserSerializer):
+    new_posts_count = serializers.SerializerMethodField()
+
+    class Meta(UserSerializer.Meta):
+        fields = list(UserSerializer.Meta.fields) + ['new_posts_count']
+
+    def get_new_posts_count(self, obj):
+        if hasattr(obj, 'contributor'):
+            time_threshold = timezone.now() - timedelta(days=1)
+            return Post.objects.filter(contributor=obj.contributor, created_at__gte=time_threshold).count()
+        else:
+            return None
 
 
 class ResetPasswordSerializer(serializers.Serializer):

@@ -34,3 +34,15 @@ class User(AbstractUser):
 
     def get_absolute_url(self):
         return reverse("users:detail", kwargs={"username": self.username})
+
+
+class Follow(models.Model):
+    follower = models.ForeignKey(User, related_name="following", on_delete=models.CASCADE)
+    followed = models.ForeignKey(User, related_name="followers", on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'followed')  # Ensures one cannot follow the same person more than once
+
+    def __str__(self):
+        return f"{self.follower} follows {self.followed}"

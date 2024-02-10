@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
 
 from rest_framework import serializers
 
@@ -38,4 +39,6 @@ class ContributorSerializer(serializers.ModelSerializer):
         rep = super().to_representation(instance)
         if instance.category:
             rep['category'] = CategorySerializer(instance.category).data
+        rep['rating'] = instance.reviews.aggregate(Avg('rating'))['rating__avg']
+        rep['rating_count'] = instance.reviews.count()
         return rep
