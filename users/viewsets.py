@@ -159,8 +159,8 @@ class UserViewSet(ModelViewSet):
         return Response({'detail': 'Account has been deleted'}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
-    def follow(self, request, user_id):
-        user_to_follow = User.objects.get(pk=user_id)
+    def follow(self, request):
+        user_to_follow = User.objects.get(pk=request.data.get('user'))
         follow, created = Follow.objects.get_or_create(follower=request.user, followed=user_to_follow)
         if created:
             return Response('You are now following this user.', status=status.HTTP_200_OK)
@@ -168,8 +168,8 @@ class UserViewSet(ModelViewSet):
             return Response('You are already following this user.', status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
-    def unfollow(self, request, user_id):
-        user_to_unfollow = User.objects.get(pk=user_id)
+    def unfollow(self, request):
+        user_to_unfollow = User.objects.get(pk=request.data.get('user'))
         follow = Follow.objects.get(follower=request.user, followed=user_to_unfollow)
         follow.delete()
         return Response('You have unfollowed this user.', status=status.HTTP_200_OK)
@@ -194,6 +194,7 @@ class UserViewSet(ModelViewSet):
         serializer = ExtendedUserSerializer(following_users, many=True, context={'request': request})
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def list_followers(self, request):
         user_id = request.query_params.get('user_id')
         search = request.query_params.get('search', None)

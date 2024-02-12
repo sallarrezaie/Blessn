@@ -17,6 +17,8 @@ from contributors.models import Contributor
 
 from dropdowns.models import Occasion
 
+from decimal import Decimal
+
 import stripe
 import djstripe
 
@@ -37,15 +39,27 @@ class PaymentViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def test_payment_method(self, request):
-        payment_method = stripe.PaymentMethod.create(
-        type="card",
-        card={
-            "number": "4000000000000077",
-            "exp_month": 2,
-            "exp_year": 2025,
-            "cvc": "314",
-        },
+        # Create a token
+        token_response = stripe.Token.create(
+            card={
+                "number": "4242424242424242",
+                "exp_month": 2,
+                "exp_year": 2025,
+                "cvc": "314",
+            },
         )
+        
+        # Extract the token ID from the response
+        token_id = token_response.id
+
+        # Use the token ID to create a payment method
+        payment_method = stripe.PaymentMethod.create(
+            type="card",
+            card={
+                "token": token_id,
+            },
+        )
+
         return Response(payment_method)
 
 
@@ -73,10 +87,9 @@ class PaymentViewSet(ModelViewSet):
         else:
             occasion = None
 
-        booking_fee = video_fee * (BOOKING_FEE / 100)
+        booking_fee = video_fee * Decimal((BOOKING_FEE / 100))
 
         order = Order.objects.create(
-            user=request.user,
             consumer=consumer,
             contributor=contributor,
             video_fee=video_fee,
@@ -128,11 +141,12 @@ class PaymentViewSet(ModelViewSet):
                 currency='usd',
                 description=f'Charge for Order {order.id}',
                 confirm=True,
+                return_url='http://localhost:8080/auth/',
             )
+
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
-        charge_id = consumer_payment_intent.charges.data[0].id
+                
         # Sync with djstripe models
         dj_consumer_payment_intent = djstripe.models.PaymentIntent.sync_from_stripe_data(consumer_payment_intent)
 
@@ -142,11 +156,9 @@ class PaymentViewSet(ModelViewSet):
             amount=order.total,
             consumer_payment_intent=dj_consumer_payment_intent,
             payment_method=dj_payment_method,
-            charge_id=charge_id
         )
         order.status = 'In Progress'
         order.paid_at = timezone.now()
-        order.consumer_charge_id = charge_id
         order.save()
 
         request.user.consumer.save()

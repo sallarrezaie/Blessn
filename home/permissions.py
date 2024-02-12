@@ -9,19 +9,6 @@ class IsGetOrIsAuthenticated(permissions.BasePermission):
 
         return request.user and request.user.is_authenticated
 
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_superuser:
-            return True
-        
-        if request.method == 'PATCH' or request.method == 'PUT' or request.method == "DELETE":
-            if obj == request.user:
-                return True
-        
-        if request.method == 'GET':
-            return True
-
-        return False
-
 
 class IsPostOrIsAuthenticated(permissions.BasePermission):
 

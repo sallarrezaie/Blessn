@@ -15,6 +15,11 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = '__all__'
+        extra_kwargs = {
+            'contributor': {
+                'required': False
+            }
+        }
 
     def create(self, validated_data):
         post_files_data = validated_data.pop('post_files', None)
