@@ -21,6 +21,8 @@ from home.permissions import IsPostOrIsAuthenticated
 from .serializers import UserSerializer, ResetPasswordSerializer, CustomAuthTokenSerializer, OTPSerializer, ChangePasswordSerializer, \
     ExtendedUserSerializer
 from .models import Follow
+from contributors.models import Tag
+from contributors.serializers import TagSerializer
 
 
 User = get_user_model()
@@ -34,6 +36,15 @@ class UserViewSet(ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['approved_contributor', 'contributor__category']
     search_fields = ['name']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        tags = self.request.query_params.getlist('tags')
+
+        if tags:
+            queryset = queryset.filter(contributor__tags__name__in=tags).distinct()
+
+        return queryset
 
     # Create User and return Token + Profile
     def create(self, request, *args, **kwargs):
@@ -214,3 +225,28 @@ class UserViewSet(ModelViewSet):
 
         serializer = ExtendedUserSerializer(followers, many=True, context={'request': request})
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def add_tag(self, request):
+        contributor = request.user.contributor
+        tag_name = request.data.get('tag')
+        tag, created = Tag.objects.get_or_create(name=tag_name)
+        contributor.tags.add(tag)
+        return Response({"status": "Tag added"}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def remove_tag(self, request):
+        contributor = request.user.contributor
+        tag_name = request.data.get('tag')
+        try:
+            tag = Tag.objects.get(name=tag_name)
+            contributor.tags.remove(tag)
+            return Response({"status": "Tag removed"}, status=status.HTTP_200_OK)
+        except Tag.DoesNotExist:
+            return Response({"error": "Tag not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get'])
+    def list_tags(self, request):
+        tags = Tag.objects.filter(display=True)
+        serializer = TagSerializer(tags, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

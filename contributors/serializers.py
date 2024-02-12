@@ -3,11 +3,17 @@ from django.db.models import Avg
 
 from rest_framework import serializers
 
-from .models import Contributor, ContributorPhotoVideo
+from .models import Contributor, ContributorPhotoVideo, Tag
 from categories.serializers import CategorySerializer
 
 
 User = get_user_model()
+
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = '__all__'
 
 
 class ContributorPhotoVideoSerializer(serializers.ModelSerializer):
@@ -19,6 +25,7 @@ class ContributorPhotoVideoSerializer(serializers.ModelSerializer):
 
 class ContributorSerializer(serializers.ModelSerializer):
     photos_videos = ContributorPhotoVideoSerializer(many=True, required=False)
+    tags = TagSerializer(many=True, required=False)
 
     class Meta:
         model = Contributor
