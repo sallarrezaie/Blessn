@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password
-from django.db.models import Q
+from django.db.models import Q, Avg
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -40,9 +40,17 @@ class UserViewSet(ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         tags = self.request.query_params.getlist('tags')
+        min_rating = self.request.query_params.get('min_rating', None)
+
+        queryset = queryset.annotate(
+            average_rating=Avg('contributor__reviews__rating')
+        )
 
         if tags:
             queryset = queryset.filter(contributor__tags__name__in=tags).distinct()
+
+        if min_rating:
+            queryset = queryset.filter(average_rating__gte=min_rating)
 
         return queryset
 
