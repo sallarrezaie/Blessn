@@ -1,16 +1,19 @@
 from rest_framework import serializers
 from .models import Post, PostFile, Like
 
+from users.serializers import UserSerializer
+
 
 class PostFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostFile
-        fields = ['file']
+        fields = ['id', 'file', 'media_type', 'thumbnail', 'created_at']
 
 
 class PostSerializer(serializers.ModelSerializer):
     post_files = PostFileSerializer(many=True, required=False)
     likes_count = serializers.SerializerMethodField()
+    is_liked_by_user = serializers.SerializerMethodField() 
 
     class Meta:
         model = Post
@@ -45,3 +48,15 @@ class PostSerializer(serializers.ModelSerializer):
     def get_likes_count(self, obj):
         """Returns the count of likes for the post."""
         return Like.objects.filter(post=obj).count()
+
+    def get_is_liked_by_user(self, obj):
+        """Check if the post is liked by the authenticated user."""
+        user = self.context.get('request').user
+        if user and user.is_authenticated:
+            return Like.objects.filter(post=obj, user=user).exists()
+        return False
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['user'] = UserSerializer(instance.contributor.user).data
+        return rep

@@ -3,6 +3,7 @@ from django.core.mail import EmailMessage
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password
 from django.db.models import Q, Avg
+from math import radians, cos
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -34,7 +35,7 @@ class UserViewSet(ModelViewSet):
     authentication_classes  = [TokenAuthentication]
     queryset = User.objects.all()
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['approved_contributor', 'contributor__category']
+    filterset_fields = ['approved_contributor', 'contributor__category', 'city', 'state', 'country']
     search_fields = ['name']
 
     def get_queryset(self):
@@ -51,6 +52,30 @@ class UserViewSet(ModelViewSet):
 
         if min_rating:
             queryset = queryset.filter(average_rating__gte=min_rating)
+
+        lat = self.request.query_params.get('latitude')
+        lon = self.request.query_params.get('longitude')
+        if lat and lon:
+            # Convert latitude and longitude to floats
+            lat = float(lat)
+            lon = float(lon)
+
+            # Assuming a rough approximation of 69 miles per degree
+            miles_per_degree = 69.0
+            distance = 50  # Distance in miles
+
+            # Calculate the latitude and longitude deltas
+            delta_lat = distance / miles_per_degree
+            delta_lon = distance / (miles_per_degree * cos(radians(lat)))
+
+            # Calculate the square bounding box
+            min_lat = lat - delta_lat
+            max_lat = lat + delta_lat
+            min_lon = lon - delta_lon
+            max_lon = lon + delta_lon
+
+            queryset = queryset.filter(latitude__gte=min_lat, latitude__lte=max_lat,
+                                       longitude__gte=min_lon, longitude__lte=max_lon)
 
         return queryset
 

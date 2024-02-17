@@ -28,7 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ('id', 'username', 'name', 'first_name', 'last_name', 'email', 'password', 'password_2', 'terms_accepted', 'dob', 'about_me',
                   'consumer', 'contributor', 'applied_contributor', 'approved_contributor', 'picture', 'master_notification', 'in_app_notification', 
-                  'push_notification', 'email_notification','sms_notification', 'registration_id')
+                  'push_notification', 'email_notification','sms_notification', 'registration_id', 'country', 'state', 'city', 'address', 'latitude', 'longitude', 'postal_code')
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5},
                         'password_2': {'write_only': True, 'min_length': 5},
                         'email': {'required': True},

@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Avg
+from django.db.models import Avg, Sum
 
 from rest_framework import serializers
 
 from .models import Contributor, ContributorPhotoVideo, Tag
 from categories.serializers import CategorySerializer
+
+from users.models import Follow
 
 
 User = get_user_model()
@@ -48,4 +50,19 @@ class ContributorSerializer(serializers.ModelSerializer):
             rep['category'] = CategorySerializer(instance.category).data
         rep['rating'] = instance.reviews.aggregate(Avg('rating'))['rating__avg']
         rep['rating_count'] = instance.reviews.count()
+        rep['post_count'] = instance.posts.all().count()
+        user = instance.user
+        followers_count = Follow.objects.filter(followed=user).count()
+        following_count = Follow.objects.filter(follower=user).count()
+
+        rep['followers_count'] = followers_count
+        rep['following_count'] = following_count
+
+        earnings = instance.orders.aggregate(total_earnings=Sum('video_fee'))['total_earnings']
+        earnings = earnings if earnings is not None else 0
+
+        rep['earnings'] = earnings
+
+        pending_booking_requests = instance.orders.filter(status='Pending').count()
+        rep['pending_booking_requests'] = pending_booking_requests
         return rep

@@ -55,3 +55,5 @@ class ContributorPhotoVideo(models.Model):
     file = models.FileField(upload_to="contributor_display_files")
     title = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
+    media_type = models.CharField(max_length=255, blank=True)
+    thumbnail = models.FileField(upload_to="contributor_display_files", blank=True, null=True)

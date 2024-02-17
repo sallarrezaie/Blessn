@@ -21,6 +21,13 @@ class User(AbstractUser):
     applied_contributor = models.BooleanField(default=False)
     approved_contributor = models.BooleanField(default=False)
     registration_id = models.CharField(max_length=500, blank=True)
+    country = models.CharField(max_length=255, blank=True)
+    state = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=255, blank=True)
+    address = models.CharField(max_length=255, blank=True)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
+    postal_code = models.CharField(max_length=255, blank=True)
 
     # Notification Settings
     master_notification = models.BooleanField(default=True)

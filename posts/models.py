@@ -36,6 +36,15 @@ class PostFile(models.Model):
     file = models.FileField(
         upload_to='post_files'
     )
+    media_type = models.CharField(
+        max_length=255,
+        blank=True
+    )
+    thumbnail = models.FileField(
+        upload_to='post_files',
+        blank=True,
+        null=True
+    )
     created_at = models.DateTimeField(
         auto_now_add=True
     )
