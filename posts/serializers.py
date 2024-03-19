@@ -57,6 +57,7 @@ class PostSerializer(serializers.ModelSerializer):
         return False
 
     def to_representation(self, instance):
+        request = self.context.get('request')
         rep = super().to_representation(instance)
-        rep['user'] = UserSerializer(instance.contributor.user).data
+        rep['user'] = UserSerializer(instance.contributor.user, context={'request': request}).data
         return rep

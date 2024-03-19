@@ -6,6 +6,7 @@ from rest_framework import serializers
 from .models import Contributor, ContributorPhotoVideo, Tag
 from categories.serializers import CategorySerializer
 
+from blessn.settings import BOOKING_FEE
 from users.models import Follow
 
 
@@ -65,4 +66,5 @@ class ContributorSerializer(serializers.ModelSerializer):
 
         pending_booking_requests = instance.orders.filter(status='Pending').count()
         rep['pending_booking_requests'] = pending_booking_requests
+        rep['booking_fee'] = BOOKING_FEE
         return rep

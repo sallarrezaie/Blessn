@@ -36,6 +36,8 @@ class User(AbstractUser):
     email_notification = models.BooleanField(default=True)
     sms_notification = models.BooleanField(default=True)
 
+    blocked_users = models.ManyToManyField('self', blank=True, related_name="blockers", symmetrical=False)
+
     USERNAME_FIELD = 'email'  # Use email as the login identifier
     REQUIRED_FIELDS = []
 

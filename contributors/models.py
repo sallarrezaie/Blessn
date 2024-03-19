@@ -35,17 +35,17 @@ class Contributor(models.Model):
     normal_delivery_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0
+        default=50
     )
     fast_delivery_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0
+        default=100
     )
     same_day_delivery_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0
+        default=150
     )
     tags = models.ManyToManyField(Tag, related_name='contributors', blank=True)
 

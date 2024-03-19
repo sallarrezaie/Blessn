@@ -10,6 +10,7 @@ from consumers.models import Consumer
 from consumers.serializers import ConsumerSerializer
 from home.utils import verifyOTP
 from posts.models import Post
+from .models import Follow
 
 
 User = get_user_model()
@@ -22,13 +23,16 @@ class UserSerializer(serializers.ModelSerializer):
     consumer = ConsumerSerializer(required=False)
     contributor = ContributorSerializer(required=False)
     password_2 = serializers.CharField(required=False)
+    is_blocked = serializers.SerializerMethodField()
+    is_followed = serializers.SerializerMethodField()
 
 
     class Meta:
         model = get_user_model()
         fields = ('id', 'username', 'name', 'first_name', 'last_name', 'email', 'password', 'password_2', 'terms_accepted', 'dob', 'about_me',
                   'consumer', 'contributor', 'applied_contributor', 'approved_contributor', 'picture', 'master_notification', 'in_app_notification', 
-                  'push_notification', 'email_notification','sms_notification', 'registration_id', 'country', 'state', 'city', 'address', 'latitude', 'longitude', 'postal_code')
+                  'push_notification', 'email_notification','sms_notification', 'registration_id', 'country', 'state', 'city', 'address', 'latitude', 
+                  'longitude', 'postal_code', 'is_blocked', 'is_followed')
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5},
                         'password_2': {'write_only': True, 'min_length': 5},
                         'email': {'required': True},
@@ -105,6 +109,18 @@ class UserSerializer(serializers.ModelSerializer):
             user.applied_contributor = True
             user.save()
         return user
+
+    def get_is_blocked(self, obj):
+        request = self.context.get('request', None)
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            return request.user.blocked_users.filter(pk=obj.pk).exists()
+        return False
+
+    def get_is_followed(self, obj):
+        request = self.context.get('request', None)
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            return Follow.objects.filter(follower=request.user, followed=obj).exists()
+        return False
 
 
 class ExtendedUserSerializer(UserSerializer):

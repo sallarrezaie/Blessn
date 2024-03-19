@@ -125,7 +125,7 @@ class UserViewSet(ModelViewSet):
             if not user.is_active:
                 return Response({'detail': 'This user has been deactivated. Please contact support for assistance.'}, status=status.HTTP_401_UNAUTHORIZED)
             token = auth_token(user)
-            serializer = UserSerializer(user, context = {'request':request})
+            serializer = UserSerializer(user, context={'request': request})
             return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -205,6 +205,8 @@ class UserViewSet(ModelViewSet):
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def follow(self, request):
         user_to_follow = User.objects.get(pk=request.data.get('user'))
+        if user_to_follow == request.user:
+            return Response('You cannot follow yourself.', status=status.HTTP_400_BAD_REQUEST)
         follow, created = Follow.objects.get_or_create(follower=request.user, followed=user_to_follow)
         if created:
             return Response('You are now following this user.', status=status.HTTP_200_OK)
@@ -220,33 +222,42 @@ class UserViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def list_following(self, request):
-        user_id = request.query_params.get('user_id')
+        user_id = request.query_params.get('user_id', None)
         search = request.query_params.get('search', None)
-        user = User.objects.get(id=user_id)
+        
+        user = request.user if not user_id else User.objects.get(id=user_id)
 
         if search:
+            # Filter the users being followed based on search criteria.
             following_users = User.objects.filter(
-                Q(followers__follower=user) &
+                Q(id__in=user.following.values_list('followed_id', flat=True)) &
                 (
-                    Q(name__icontains=search) |
-                    Q(first_name__icontains=search) |
+                    Q(name__icontains=search) | 
+                    Q(first_name__icontains=search) | 
                     Q(last_name__icontains=search)
                 )
             ).distinct()
         else:
-            following_users = User.objects.filter(following__follower=user).distinct()
+            # Get all users being followed by user without search filter.
+            following_users = User.objects.filter(
+                id__in=user.following.values_list('followed_id', flat=True)
+            ).distinct()
+
         serializer = ExtendedUserSerializer(following_users, many=True, context={'request': request})
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def list_followers(self, request):
-        user_id = request.query_params.get('user_id')
+        user_id = request.query_params.get('user_id', None)
         search = request.query_params.get('search', None)
-        user = User.objects.get(id=user_id)
 
+        # Use the authenticated user if no user_id is provided, else fetch the specified user
+        user = request.user if not user_id else User.objects.get(id=user_id)
+
+        # Initially filter users who are followers of 'user'
         if search:
             followers = User.objects.filter(
-                Q(following__followed=user) &
+                Q(followers__followed=user) &
                 (
                     Q(name__icontains=search) |
                     Q(first_name__icontains=search) |
@@ -254,10 +265,13 @@ class UserViewSet(ModelViewSet):
                 )
             ).distinct()
         else:
-            followers = User.objects.filter(following__followed=user).distinct()
+            followers = User.objects.filter(
+                followers__followed=user  # Fetch users following 'user'
+            ).distinct()
 
         serializer = ExtendedUserSerializer(followers, many=True, context={'request': request})
         return Response(serializer.data)
+
 
     @action(detail=False, methods=['post'])
     def add_tag(self, request):
@@ -283,3 +297,30 @@ class UserViewSet(ModelViewSet):
         tags = Tag.objects.filter(display=True)
         serializer = TagSerializer(tags, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def block_user(self, request):
+        """Block a user."""
+        try:
+            user_to_block = User.objects.get(pk=request.data.get('user_id'))
+        except User.DoesNotExist:
+            return Response("User not found.", status=status.HTTP_404_NOT_FOUND)
+        request.user.blocked_users.add(user_to_block)
+        return Response({"status": "user blocked"})
+
+    @action(detail=False, methods=['post'])
+    def unblock_user(self, request):
+        """Unblock a user."""
+        try:
+            user_to_unblock = User.objects.get(pk=request.data.get('user_id'))
+        except User.DoesNotExist:
+            raise Response("User not found.", status=status.HTTP_404_NOT_FOUND)
+        request.user.blocked_users.remove(user_to_unblock)
+        return Response({"status": "user unblocked"})
+
+    @action(detail=False, methods=['get'])
+    def list_blocked_users(self, request):
+        """List all blocked users."""
+        blocked_users = request.user.blocked_users.all()
+        serializer = UserSerializer(blocked_users, many=True, context={'request': request})
+        return Response(serializer.data)
