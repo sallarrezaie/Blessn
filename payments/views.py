@@ -255,6 +255,25 @@ class PaymentViewSet(ModelViewSet):
     def add_payment_method(self, request):
         profile = request.user.consumer
         billing_details = request.data.get('billing_details')
+
+        if 'name' not in billing_details:
+            return Response("Missing name in billing details", status=status.HTTP_400_BAD_REQUEST)
+
+        if 'address' not in billing_details:
+            return Response("Missing address information in billing details", status=status.HTTP_400_BAD_REQUEST)
+        else:
+            address = billing_details['address']
+            if 'city' not in address:
+                return Response("Missing city in address", status=status.HTTP_400_BAD_REQUEST)
+            if 'country' not in address:
+                return Response("Missing country in address", status=status.HTTP_400_BAD_REQUEST)
+            if 'line1' not in address:
+                return Response("Missing line1 in address", status=status.HTTP_400_BAD_REQUEST)
+            if 'postal_code' not in address:
+                return Response("Missing postal_code in address", status=status.HTTP_400_BAD_REQUEST)
+            if 'state' not in address:
+                return Response("Missing state in address", status=status.HTTP_400_BAD_REQUEST)
+
         if profile.stripe_account:
             customer_id = profile.stripe_account.id
         else:
@@ -276,28 +295,32 @@ class PaymentViewSet(ModelViewSet):
         payment_method_id = request.data.get('payment_method', None)
         if payment_method_id is None:
             return Response({'detail': 'Missing Payment Method ID'}, status=status.HTTP_400_BAD_REQUEST)
-        payment_method = stripe.PaymentMethod.attach(payment_method_id, customer=customer_id)
-        payment_method = stripe.PaymentMethod.modify(
-            payment_method['id'],
-            billing_details={
-                "address": {
-                    "city": billing_details["address"]["city"],
-                    "country": billing_details["address"]["country"],
-                    "line1": billing_details["address"]["line1"],
-                    "postal_code": billing_details["address"]["postal_code"],
-                    "state": billing_details["address"]["state"]
+        try:    
+            payment_method = stripe.PaymentMethod.attach(payment_method_id, customer=customer_id)
+            payment_method = stripe.PaymentMethod.modify(
+                payment_method['id'],
+                billing_details={
+                    "address": {
+                        "city": billing_details["address"]["city"],
+                        "country": billing_details["address"]["country"],
+                        "line1": billing_details["address"]["line1"],
+                        "postal_code": billing_details["address"]["postal_code"],
+                        "state": billing_details["address"]["state"]
+                    },
+                    "name": billing_details["name"],
+                }
+            )
+
+            stripe.Customer.modify(
+                customer_id,
+                invoice_settings={
+                    'default_payment_method': payment_method['id'],
                 },
-                "name": billing_details["name"],
-            }
-        )
-        stripe.Customer.modify(
-            customer_id,
-            invoice_settings={
-                'default_payment_method': payment_method['id'],
-            },
-        )
-        djstripe.models.PaymentMethod.sync_from_stripe_data(payment_method)
-        payment_methods = stripe.PaymentMethod.list(customer=customer_id, type='card')
+            )
+            djstripe.models.PaymentMethod.sync_from_stripe_data(payment_method)
+            payment_methods = stripe.PaymentMethod.list(customer=customer_id, type='card')
+        except Exception as e:
+            return Response({f"Stripe Error: {e}"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(payment_methods)
 
     # Check Business Account
