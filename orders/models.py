@@ -70,7 +70,8 @@ class Order(models.Model):
             ('Refund Requested', 'Refund Requested'),
             ('Refunded', 'Refunded'),
             ('Cancel Requested', 'Cancel Requested'),
-            ('Cancelled', 'Cancelled')
+            ('Cancelled', 'Cancelled'),
+            ('Flagged', 'Flagged')
         ),
         default='Pending'
     )
@@ -91,6 +92,19 @@ class Order(models.Model):
     cancelled_at = models.DateTimeField(
         blank=True,
         null=True
+    )
+    cancel_reason = models.TextField(
+        blank=True
+    )
+    flagged = models.BooleanField(
+        default=False
+    )
+    flagged_at = models.DateTimeField(
+        blank=True,
+        null=True
+    )
+    flagged_reason = models.TextField(
+        blank=True
     )
     paid_at = models.DateTimeField(
         blank=True,

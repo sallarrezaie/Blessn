@@ -95,6 +95,29 @@ class OrderViewSet(ModelViewSet):
         return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
+    def mark_as_flagged(self, request):
+        flagged_reason = request.data.get('flagged_reason', '')
+        order_id = request.data.get('order_id')
+        order = Order.objects.get(id=order_id)
+        order.status = 'Flagged'
+        order.flagged = True
+        order.flagged_reason = flagged_reason
+        order.flagged_at = datetime.now()
+        order.save()
+        
+        payments = Payment.objects.filter(order=order)
+        for payment in payments:
+            payment_intent = payment.consumer_payment_intent.id
+            stripe.Refund.create(
+                payment_intent=payment_intent,
+            )
+            payment.refunded = True
+            payment.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+
+    @action(detail=False, methods=['post'])
     def mark_as_unarchived(self, request):
         order_id = request.data.get('order_id')
         order = Order.objects.get(id=order_id)
@@ -132,10 +155,12 @@ class OrderViewSet(ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def mark_as_cancelled(self, request):
+        cancel_reason = request.data.get('cancel_reason', '')
         order_id = request.data.get('order_id')
         order = Order.objects.get(id=order_id)
         order.status = 'Cancelled'
         order.cancelled_at = datetime.now()
+        order.cancel_reason = cancel_reason
         order.save()
 
         payments = Payment.objects.filter(order=order)
