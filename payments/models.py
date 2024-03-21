@@ -26,14 +26,16 @@ class Payment(models.Model):
         max_digits=8,
         decimal_places=2
     )
-    consumer_payment_intent = models.OneToOneField(
+    consumer_payment_intent = models.ForeignKey(
         PaymentIntent,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        related_name='payments',
         null=True
     )
-    payment_method = models.OneToOneField(
+    payment_method = models.ForeignKey(
         PaymentMethod,
         on_delete=models.SET_NULL,
+        related_name='payments',
         null=True
     )
     charge_id = models.CharField(

@@ -67,8 +67,10 @@ class PaymentViewSet(ModelViewSet):
     def place_an_order(self, request):
         payment_method = request.data.get('payment_method')
         consumer = request.user.consumer
-        contributor = Contributor.objects.get(id=request.data.get('contributor_id'))
-
+        try:
+            contributor = Contributor.objects.get(id=request.data.get('contributor_id'))
+        except:
+            return Response('Contributor with this ID not found', status=status.HTTP_400_BAD_REQUEST)
         turnaround_selected = request.data.get('turnaround_selected')
         if turnaround_selected == 'normal':
             video_fee = contributor.normal_delivery_price
@@ -254,7 +256,10 @@ class PaymentViewSet(ModelViewSet):
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def add_payment_method(self, request):
         profile = request.user.consumer
-        billing_details = request.data.get('billing_details')
+        billing_details = request.data.get('billing_details', None)
+
+        if billing_details is None:
+            return Response("Missing billing details", status=status.HTTP_400_BAD_REQUEST)
 
         if 'name' not in billing_details:
             return Response("Missing name in billing details", status=status.HTTP_400_BAD_REQUEST)
@@ -328,7 +333,10 @@ class PaymentViewSet(ModelViewSet):
     def check(self, request):
         profile = request.user.contributor
         connect_account = profile.connect_account
-        account = stripe.Account.retrieve(connect_account.id)
+        try:
+            account = stripe.Account.retrieve(connect_account.id)
+        except:
+            return Response("Contributor Connect Account not found", status=status.HTTP_400_BAD_REQUEST)
         djstripe_account = djstripe.models.Account.sync_from_stripe_data(account)
         profile.connect_account = djstripe_account
         profile.save()
@@ -355,8 +363,8 @@ class PaymentViewSet(ModelViewSet):
             else:
                 link = stripe.AccountLink.create(
                     account=account_id,
-                    refresh_url="https://fasterdrivers.com/restaurant/settings/stripe?reauth=true",
-                    return_url="https://fasterdrivers.com/restaurant/settings/stripe?return=true",
+                    refresh_url="http://localhost:8080/reauth/",
+                    return_url="http://localhost:8080/return/",
                     type="account_onboarding",
                 )
                 return Response({'link': link})
