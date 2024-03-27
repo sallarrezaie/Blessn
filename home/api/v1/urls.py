@@ -17,6 +17,7 @@ from dropdowns.views import OccasionViewSet
 from payments.views import PaymentViewSet
 from orders.views import OrderViewSet
 from posts.views import PostViewSet
+from chat.views import ChatChannelViewSet
 
 router = DefaultRouter()
 router.register("signup", SignupViewSet, basename="signup")
@@ -32,6 +33,7 @@ router.register("occasions", OccasionViewSet, basename="occasions")
 router.register("payments", PaymentViewSet, basename="payments")
 router.register('orders', OrderViewSet, basename='orders')
 router.register("posts", PostViewSet, basename='posts')
+router.register("chat", ChatChannelViewSet, basename="chat")
 
 
 urlpatterns = [

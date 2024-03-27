@@ -84,7 +84,8 @@ LOCAL_APPS = [
     'dropdowns',
     'orders',
     'payments',
-    'posts'
+    'posts',
+    'chat'
 ]
 THIRD_PARTY_APPS = [
     'rest_framework',
@@ -323,3 +324,6 @@ STRIPE_TEST_SECRET_KEY = env.str("STRIPE_TEST_SECRET_KEY", "")
 CONNECTED_SECRET = env.str("CONNECTED_SECRET", "")
 DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 DJSTRIPE_WEBHOOK_SECRET = env.str("DJSTRIPE_WEBHOOK_SECRET", "")
+
+PUBNUB_PUBLISH_KEY = env.str("PUBNUB_PUBLISH_KEY", "")
+PUBNUB_SUBSCRIBE_KEY = env.str("PUBNUB_SUBSCRIBE_KEY", "")

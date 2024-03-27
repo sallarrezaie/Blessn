@@ -10,6 +10,7 @@ from payments.models import Payment
 from payments.serializers import PaymentSerializer
 
 from orders.models import Order
+from chat.models import ChatChannel
 
 from users.models import User
 
@@ -102,6 +103,11 @@ class PaymentViewSet(ModelViewSet):
             video_to_say=request.data.get('video_to_say', ''),
             occasion=occasion
         )
+
+        chat = ChatChannel.objects.create(
+            order=order
+        )
+        chat.users.add(consumer.user, contributor.user)
         
         amount_to_charge = order.total
 

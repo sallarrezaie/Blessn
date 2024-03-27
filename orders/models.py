@@ -96,6 +96,13 @@ class Order(models.Model):
     cancel_reason = models.TextField(
         blank=True
     )
+    cancel_denied_at = models.DateTimeField(
+        blank=True,
+        null=True
+    )
+    cancel_denied_reason = models.TextField(
+        blank=True
+    )
     flagged = models.BooleanField(
         default=False
     )

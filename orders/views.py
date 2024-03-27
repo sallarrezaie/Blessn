@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from .serializers import OrderSerializer
 from .models import Order, Review
+from chat.models import ChatChannel, ChatMessage
 
 from payments.models import Payment
 
@@ -38,6 +39,22 @@ class OrderViewSet(ModelViewSet):
         order.status = 'Delivered'
         order.delivered_at = datetime.now()
         order.save()
+        return Response(status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def deny_cancellation(self, request):
+        order_id = request.data.get('order_id')
+        order = Order.objects.get(id=order_id)
+        order.status = 'Delivered'
+        order.cancel_denied_at = datetime.now()
+        order.cancel_denied_reason = request.data.get('cancel_denied_reason', '')
+        order.save()
+        channel = ChatChannel.objects.get(order=order)
+        ChatMessage.objects.create(
+            channel=channel,
+            text=f"Your cancellation request has been denied. Reason: {order.cancel_denied_reason}",
+            sender=order.contributor.user
+        )
         return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
