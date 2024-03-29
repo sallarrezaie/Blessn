@@ -307,7 +307,7 @@ class UserViewSet(ModelViewSet):
         except User.DoesNotExist:
             return Response("User not found.", status=status.HTTP_404_NOT_FOUND)
         request.user.blocked_users.add(user_to_block)
-        return Response({"status": "user blocked"})
+        return Response("User blocked")
 
     @action(detail=False, methods=['post'])
     def unblock_user(self, request):
@@ -317,7 +317,7 @@ class UserViewSet(ModelViewSet):
         except User.DoesNotExist:
             raise Response("User not found.", status=status.HTTP_404_NOT_FOUND)
         request.user.blocked_users.remove(user_to_unblock)
-        return Response({"status": "user unblocked"})
+        return Response("User unblocked")
 
     @action(detail=False, methods=['get'])
     def list_blocked_users(self, request):
