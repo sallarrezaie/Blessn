@@ -265,8 +265,9 @@ class UserViewSet(ModelViewSet):
                 )
             ).distinct()
         else:
+            follow_objs = Follow.objects.filter(followed=user)
             followers = User.objects.filter(
-                followers__followed=user  # Fetch users following 'user'
+                following__follower_id__in=follow_objs.values_list('follower_id', flat=True)
             ).distinct()
 
         serializer = ExtendedUserSerializer(followers, many=True, context={'request': request})
