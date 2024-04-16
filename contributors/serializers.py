@@ -19,6 +19,17 @@ class TagSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AdminTagSerializer(serializers.ModelSerializer):
+    user_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+    def get_user_count(self, obj):
+        return obj.contributors.count()
+
+
 class ContributorPhotoVideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContributorPhotoVideo

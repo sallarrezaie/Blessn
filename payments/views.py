@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from payments.models import Payment
+from payments.models import Payment, BookingFee
 from payments.serializers import PaymentSerializer
 
 from orders.models import Order
@@ -90,7 +90,13 @@ class PaymentViewSet(ModelViewSet):
         else:
             occasion = None
 
-        booking_fee = video_fee * Decimal((BOOKING_FEE / 100))
+        try:
+            bk_fee = BookingFee.objects.first()
+            admin_booking_fee = bk_fee.fee
+        except Exception:
+            admin_booking_fee = BOOKING_FEE
+
+        booking_fee = video_fee * Decimal((admin_booking_fee / 100))
 
         order = Order.objects.create(
             consumer=consumer,

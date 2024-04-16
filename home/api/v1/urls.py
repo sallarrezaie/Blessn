@@ -18,6 +18,7 @@ from payments.views import PaymentViewSet
 from orders.views import OrderViewSet
 from posts.views import PostViewSet
 from chat.views import ChatChannelViewSet
+from customadmin.views import RegistrationStats, RegistrationStatsProfiles
 
 router = DefaultRouter()
 router.register("signup", SignupViewSet, basename="signup")
@@ -38,5 +39,7 @@ router.register("chat", ChatChannelViewSet, basename="chat")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("socials/", include(("socialauth.urls", "socialauth"), namespace="socialauth"))
+    path("socials/", include(("socialauth.urls", "socialauth"), namespace="socialauth")),
+    path("admin/registration-stats/", RegistrationStats.as_view(), name="registration-stats"),
+    path("admin/registration-stats-profiles/", RegistrationStatsProfiles.as_view(), name="registration-stats-profiles")
 ]

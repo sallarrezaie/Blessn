@@ -295,7 +295,7 @@ class UserViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def list_tags(self, request):
-        tags = Tag.objects.filter(display=True)
+        tags = Tag.objects.filter(display=True, active=True)
         serializer = TagSerializer(tags, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

@@ -8,7 +8,9 @@ class Feedback(models.Model):
     email = models.CharField(max_length=255, blank=True)
     message = models.TextField()
     responded = models.BooleanField(default=False)
+    response = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    admin_read = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = "Feedback"

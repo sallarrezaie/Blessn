@@ -20,6 +20,8 @@ class User(AbstractUser):
     activation_key = models.CharField(max_length=255, blank=True)
     applied_contributor = models.BooleanField(default=False)
     approved_contributor = models.BooleanField(default=False)
+    denied_contributor = models.BooleanField(default=False)
+    missing_information = models.TextField(blank=True)
     registration_id = models.CharField(max_length=500, blank=True)
     country = models.CharField(max_length=255, blank=True)
     state = models.CharField(max_length=255, blank=True)
@@ -28,6 +30,7 @@ class User(AbstractUser):
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     postal_code = models.CharField(max_length=255, blank=True)
+    is_paused = models.BooleanField(default=False)
 
     # Notification Settings
     master_notification = models.BooleanField(default=True)

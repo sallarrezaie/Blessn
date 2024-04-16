@@ -5,7 +5,7 @@ from datetime import timedelta
 from rest_framework import serializers
 
 from contributors.models import Contributor
-from contributors.serializers import ContributorSerializer
+from contributors.serializers import ContributorSerializer, TagSerializer
 from consumers.models import Consumer
 from consumers.serializers import ConsumerSerializer
 from home.utils import verifyOTP
@@ -237,3 +237,26 @@ class OTPSerializer(serializers.Serializer):
                 return attrs
             else:
                 raise serializers.ValidationError({'detail': 'Invalid or Expired OTP, please try again'})
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """
+    Custom serializer for creating a User
+    """
+    consumer = ConsumerSerializer(required=False)
+    contributor = ContributorSerializer(required=False)
+    password_2 = serializers.CharField(required=False)
+    is_blocked = serializers.SerializerMethodField()
+    is_followed = serializers.SerializerMethodField()
+    tags = TagSerializer(required=False, many=True)
+    order_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = get_user_model()
+        fields = '__all__'
+
+    def get_order_count(self, obj):
+        if hasattr(obj, 'contributor'):
+            return obj.contributor.orders.count()
+        else:
+            return None

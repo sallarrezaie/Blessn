@@ -49,3 +49,13 @@ class Payment(models.Model):
     refunded = models.BooleanField(
         default=False
     )
+
+
+class BookingFee(models.Model):
+    """
+    A model to represent the Booking Fees
+    """
+    fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2
+    )
