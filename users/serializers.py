@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model, authenticate
 from django.utils import timezone
 from datetime import timedelta
-
+from django.db.models import Q, Sum
 from rest_framework import serializers
 
 from contributors.models import Contributor
@@ -245,18 +245,36 @@ class AdminUserSerializer(serializers.ModelSerializer):
     """
     consumer = ConsumerSerializer(required=False)
     contributor = ContributorSerializer(required=False)
-    password_2 = serializers.CharField(required=False)
-    is_blocked = serializers.SerializerMethodField()
-    is_followed = serializers.SerializerMethodField()
     tags = TagSerializer(required=False, many=True)
-    order_count = serializers.SerializerMethodField()
+    contributor_video_count = serializers.SerializerMethodField()
+    consumer_refund_count = serializers.SerializerMethodField()
+    consumer_video_count = serializers.SerializerMethodField()
+    consumer_spent_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = get_user_model()
         fields = '__all__'
 
-    def get_order_count(self, obj):
+    def get_contributor_video_count(self, obj):
         if hasattr(obj, 'contributor'):
-            return obj.contributor.orders.count()
+            return obj.contributor.orders.filter(status="Delivered").count()
+        else:
+            return None
+
+    def get_consumer_video_count(self, obj):
+        if hasattr(obj, 'consumer'):
+            return obj.consumer.orders.all().count()
+        else:
+            return None
+
+    def get_consumer_refund_count(self, obj):
+        if hasattr(obj, 'consumer'):
+            return obj.consumer.orders.filter(Q(status="Refunded") | Q(status="Refund Requested")).count()
+        else:
+            return None
+
+    def get_consumer_spent_amount(self, obj):
+        if hasattr(obj, 'consumer'):
+            return obj.consumer.payments.filter(refunded=False).aggregate(Sum('amount'))['amount__sum']
         else:
             return None

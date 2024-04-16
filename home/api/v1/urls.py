@@ -18,7 +18,7 @@ from payments.views import PaymentViewSet
 from orders.views import OrderViewSet
 from posts.views import PostViewSet
 from chat.views import ChatChannelViewSet
-from customadmin.views import RegistrationStats, RegistrationStatsProfiles
+from customadmin.views import RegistrationStats, RegistrationStatsProfiles, ApplicationActivityStats, AdminUserViewSet, AdminFeedbackViewSet
 
 router = DefaultRouter()
 router.register("signup", SignupViewSet, basename="signup")
@@ -35,11 +35,13 @@ router.register("payments", PaymentViewSet, basename="payments")
 router.register('orders', OrderViewSet, basename='orders')
 router.register("posts", PostViewSet, basename='posts')
 router.register("chat", ChatChannelViewSet, basename="chat")
-
+router.register("admin/admin-users", AdminUserViewSet, basename="admin-users")
+router.register("admin/admin-feedbacks", AdminFeedbackViewSet, basename="admin-feedbacks")
 
 urlpatterns = [
     path("", include(router.urls)),
     path("socials/", include(("socialauth.urls", "socialauth"), namespace="socialauth")),
     path("admin/registration-stats/", RegistrationStats.as_view(), name="registration-stats"),
-    path("admin/registration-stats-profiles/", RegistrationStatsProfiles.as_view(), name="registration-stats-profiles")
+    path("admin/registration-stats-profiles/", RegistrationStatsProfiles.as_view(), name="registration-stats-profiles"),
+    path("admin/application-activity-stats/", ApplicationActivityStats.as_view(), name="application-activity-stats"),
 ]

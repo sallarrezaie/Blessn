@@ -354,65 +354,9 @@ class AdminUserViewSet(ModelViewSet):
             return Response({"error": "User does not exist."}, status=status.HTTP_400_BAD_REQUEST)
 
         posts = Post.objects.filter(contributor=user.contributor)
-        serializer = PostSerializer(posts, many=True)
+        serializer = PostSerializer(posts, many=True, context={"request": request})
         return Response(serializer.data)
 
-
-class AdminFeedbackViewSet(ModelViewSet):
-    serializer_class = FeedbackSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = Feedback.objects.all()
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    @action(detail=False, methods=['post'])
-    def respond(self, request):
-        feedback_id = request.data.get('feedback_id')
-        if not feedback_id:
-            return Response({"error": "feedback_id parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            feedback = Feedback.objects.get(id=feedback_id)
-        except Feedback.DoesNotExist:
-            return Response({"error": "Feedback does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-
-        feedback.respond = True
-        feedback.response = request.data.get('response', '')
-        feedback.save()
-
-        return Response({"message": "Feedback responded."}, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['post'])
-    def mark_read(self, request):
-        feedback_id = request.data.get('feedback_id')
-        if not feedback_id:
-            return Response({"error": "feedback_id parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            feedback = Feedback.objects.get(id=feedback_id)
-        except Feedback.DoesNotExist:
-            return Response({"error": "Feedback does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-
-        feedback.admin_read = True
-        feedback.save()
-
-        return Response({"message": "Feedback marked as read."}, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['get'])
-    def mark_all_read(self, request):
-        Feedback.objects.all().update(admin_read=True)
-        return Response({"message": "Feedbacks marked as read."}, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['get'])
-    def mark_selected_read(self, request):
-        feedback_ids = request.query_params.get('feedback_ids')
-        if not feedback_ids:
-            return Response({"error": "feedback_ids parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        feedback_ids = feedback_ids.split(',')
-        Feedback.objects.filter(id__in=feedback_ids).update(admin_read=True)
-        return Response({"message": "Feedbacks marked as read."}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def change_booking_fee(self, request):
@@ -425,7 +369,7 @@ class AdminFeedbackViewSet(ModelViewSet):
         return Response({"fee": BookingFee.objects.first().fee}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
-    def list_tags(self, request):
+    def list_global_tags(self, request):
         search_name = request.query_params.get('search_name')
 
         tags = Tag.objects.filter(display=True)
@@ -435,7 +379,7 @@ class AdminFeedbackViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
-    def deactivate_tag(self, request):
+    def deactivate_global_tag(self, request):
         tag_name = request.data.get('tag')
         if not tag_name:
             return Response({"error": "tag parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -451,7 +395,7 @@ class AdminFeedbackViewSet(ModelViewSet):
         return Response({"message": "Tag deactivated."}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
-    def add_tag(self, request):
+    def add_global_tag(self, request):
         tag_name = request.data.get('tag')
         active = request.data.get('active').lower()
         if not tag_name:
@@ -459,7 +403,7 @@ class AdminFeedbackViewSet(ModelViewSet):
 
         tag, created = Tag.objects.get_or_create(name=tag_name)
         tag.display = True
-        if status == 'true':
+        if active == 'true':
             tag.active = True
         else:
             tag.active = False
@@ -468,7 +412,7 @@ class AdminFeedbackViewSet(ModelViewSet):
         return Response({"message": "Tag added."}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
-    def delete_tag(self, request):
+    def delete_global_tag(self, request):
         tag_name = request.data.get('tag')
         if not tag_name:
             return Response({"error": "tag parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -531,7 +475,7 @@ class AdminFeedbackViewSet(ModelViewSet):
             return Response({'error': 'Invalid Category ID'}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'])
-    def refund_requets(self, request):
+    def refund_requests(self, request):
         search_name = request.query_params.get('search_name')
         orders = Order.objects.filter(status="Refund Requested")
         if search_name:
@@ -541,3 +485,60 @@ class AdminFeedbackViewSet(ModelViewSet):
             )
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AdminFeedbackViewSet(ModelViewSet):
+    serializer_class = FeedbackSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = Feedback.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['post'])
+    def respond(self, request):
+        feedback_id = request.data.get('feedback_id')
+        if not feedback_id:
+            return Response({"error": "feedback_id parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            feedback = Feedback.objects.get(id=feedback_id)
+        except Feedback.DoesNotExist:
+            return Response({"error": "Feedback does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+        feedback.respond = True
+        feedback.response = request.data.get('response', '')
+        feedback.save()
+
+        return Response({"message": "Feedback responded."}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def mark_read(self, request):
+        feedback_id = request.data.get('feedback_id')
+        if not feedback_id:
+            return Response({"error": "feedback_id parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            feedback = Feedback.objects.get(id=feedback_id)
+        except Feedback.DoesNotExist:
+            return Response({"error": "Feedback does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+        feedback.admin_read = True
+        feedback.save()
+
+        return Response({"message": "Feedback marked as read."}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'])
+    def mark_all_read(self, request):
+        Feedback.objects.all().update(admin_read=True)
+        return Response({"message": "Feedbacks marked as read."}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'])
+    def mark_selected_read(self, request):
+        feedback_ids = request.query_params.get('feedback_ids')
+        if not feedback_ids:
+            return Response({"error": "feedback_ids parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        feedback_ids = feedback_ids.split(',')
+        Feedback.objects.filter(id__in=feedback_ids).update(admin_read=True)
+        return Response({"message": "Feedbacks marked as read."}, status=status.HTTP_200_OK)
