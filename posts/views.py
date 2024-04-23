@@ -2,19 +2,41 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from django.db.models import Count, Avg, F, Value, IntegerField, FloatField, ExpressionWrapper, Case, When
+import math
+from django.db.models import Count, Avg, F, Value, IntegerField, FloatField, ExpressionWrapper, Case, When, Q
 
 from django.db.models.functions import Coalesce
+
+from users.models import User
+from users.serializers import UserSerializer
+from categories.models import Category
+from categories.serializers import CategorySerializer
+from contributors.models import Contributor, Tag
 
 from .models import Post, Like, Comment, CommentLike
 from .serializers import PostSerializer, CommentSerializer
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework.pagination import CursorPagination
+from rest_framework.pagination import CursorPagination, PageNumberPagination
 from home.permissions import IsGetOrIsAuthenticated
 
 from users.models import Follow
+
+
+class CustomPageNumberPagination(PageNumberPagination):
+    def get_paginated_response(self, data):
+        # Calculate the total number of pages
+        page_size = self.page_size  # The number of items per page
+        total_items = self.page.paginator.count  # Total count of items
+        total_pages = math.ceil(total_items / page_size)  # Compute total pages
+        
+        # Add total pages to the response
+        return Response({
+            'count': total_items,  # Total number of items
+            'total_pages': total_pages,  # New field for total pages
+            'results': data,  # Paginated data
+        })
 
 
 class RankedPostsCursorPagination(CursorPagination):
@@ -107,6 +129,44 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(posts, many=True, context={'request': request})
         
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='global_search')
+    def global_search(self, request):
+        """
+        Global search with pagination, returning paginated results for Posts, Users, or Categories.
+        """
+        query = request.query_params.get('q', None)  # Search query
+        if not query:
+            return Response({"error": "Query parameter 'q' is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        obj_type = request.query_params.get('type', None)  # Object type to filter
+        paginator = CustomPageNumberPagination()
+        paginator.page_size = 10  # Default items per page
+
+        response_data = {}
+
+        if obj_type in [None, "posts"]:  # Return Posts by default or if specified
+            matching_posts = Post.objects.filter(
+                Q(title__icontains=query) | Q(description__icontains=query)
+            ).order_by('-created_at')
+            paginated_posts = paginator.paginate_queryset(matching_posts, request)
+            post_serializer = PostSerializer(paginated_posts, many=True)
+            response_data["posts"] = paginator.get_paginated_response(post_serializer.data).data
+
+        if obj_type in [None, "users"]:  # Return Users if specified or by default
+            tag_matches = Tag.objects.filter(name__icontains=query)
+            matching_contributors = Contributor.objects.filter(tags__in=tag_matches).distinct()
+            matching_users = User.objects.filter(Q(contributor__in=matching_contributors) | Q(name__icontains=query))
+            paginated_users = paginator.paginate_queryset(matching_users, request)
+            user_serializer = UserSerializer(paginated_users, many=True)
+            response_data["users"] = paginator.get_paginated_response(user_serializer.data).data
+
+        if obj_type in [None, "categories"]:  # Return all matching Categories
+            matching_categories = Category.objects.filter(name__icontains=query).distinct()
+            category_serializer = CategorySerializer(matching_categories, many=True)
+            response_data["categories"] = category_serializer.data  # No pagination
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
