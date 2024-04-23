@@ -60,3 +60,53 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.user} likes {self.post}"
+
+
+class Comment(models.Model):
+    """
+    A model to represent comments on a post or nested comments.
+    """
+    post = models.ForeignKey(
+        'Post',
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    parent_comment = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='replies'
+    )
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        if self.parent_comment:
+            return f"Reply by {self.user} on {self.parent_comment}"
+        return f"Comment by {self.user} on {self.post}"
+
+
+class CommentLike(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comment_likes'
+    )
+    comment = models.ForeignKey(
+        Comment,
+        on_delete=models.CASCADE,
+        related_name='likes'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'comment')
+
+    def __str__(self):
+        return f"{self.user} likes {self.comment}"

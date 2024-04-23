@@ -16,7 +16,7 @@ from notifications.views import NotificationViewSet
 from dropdowns.views import OccasionViewSet
 from payments.views import PaymentViewSet
 from orders.views import OrderViewSet
-from posts.views import PostViewSet
+from posts.views import PostViewSet, CommentViewSet
 from chat.views import ChatChannelViewSet
 from customadmin.views import RegistrationStats, RegistrationStatsProfiles, ApplicationActivityStats, AdminUserViewSet, AdminFeedbackViewSet
 
@@ -34,6 +34,7 @@ router.register("occasions", OccasionViewSet, basename="occasions")
 router.register("payments", PaymentViewSet, basename="payments")
 router.register('orders', OrderViewSet, basename='orders')
 router.register("posts", PostViewSet, basename='posts')
+router.register("comments", CommentViewSet, basename='comments')
 router.register("chat", ChatChannelViewSet, basename="chat")
 router.register("admin/admin-users", AdminUserViewSet, basename="admin-users")
 router.register("admin/admin-feedbacks", AdminFeedbackViewSet, basename="admin-feedbacks")

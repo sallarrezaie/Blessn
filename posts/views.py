@@ -6,8 +6,8 @@ from django.db.models import Count, Avg, F, Value, IntegerField, FloatField, Exp
 
 from django.db.models.functions import Coalesce
 
-from .models import Post, Like
-from .serializers import PostSerializer
+from .models import Post, Like, Comment, CommentLike
+from .serializers import PostSerializer, CommentSerializer
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -98,9 +98,55 @@ class PostViewSet(viewsets.ModelViewSet):
 
         paginator = RankedPostsCursorPagination()
         page = paginator.paginate_queryset(posts, request, self)
+
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+
             return paginator.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(posts, many=True)
+        serializer = self.get_serializer(posts, many=True, context={'request': request})
+        
         return Response(serializer.data)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [IsGetOrIsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['post']
+
+    def perform_create(self, serializer):
+        """
+        Assigns the user and optionally a parent comment during creation.
+        """
+        user = self.request.user
+        parent_comment_id = self.request.data.get("parent_comment")
+        parent_comment = Comment.objects.get(id=parent_comment_id) if parent_comment_id else None
+        serializer.save(user=user, parent_comment=parent_comment)
+
+    @action(detail=True, methods=['post'])
+    def like(self, request, pk=None):
+        """
+        Like a comment.
+        """
+        user = request.user
+        comment = self.get_object()  # Get the current comment
+        if CommentLike.objects.filter(user=user, comment=comment).exists():
+            return Response("Comment already liked", status=status.HTTP_400_BAD_REQUEST)  # Already liked
+        CommentLike.objects.create(user=user, comment=comment)  # Create like
+        return Response(status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['delete'])
+    def unlike(self, request, pk=None):
+        """
+        Unlike a comment.
+        """
+        user = request.user
+        comment = self.get_object()  # Get the current comment
+        try:
+            like = CommentLike.objects.get(user=user, comment=comment)  # Get the like
+            like.delete()  # Delete the like
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except CommentLike.DoesNotExist:
+            return Response("Comment must be liked first to unlike", status=status.HTTP_404_NOT_FOUND)
