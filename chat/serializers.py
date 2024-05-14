@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
 from chat.models import ChatChannel, ChatMessage
-from home.api.v1.serializers import UserSerializer
 from orders.serializers import OrderSerializer
+from users.serializers import UserSerializer
 
 
 

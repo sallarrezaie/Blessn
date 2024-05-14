@@ -27,7 +27,7 @@ else:
 class OrderViewSet(ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = Order.objects.all()
+    queryset = Order.objects.all().order_by('-created_at')
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ['consumer', 'contributor', 'status', 'archived']
 

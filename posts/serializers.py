@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Post, PostFile, Like, Comment
+from home.api.v1.serializers import UserSerializer as MiniUserSerializer
 
 from users.serializers import UserSerializer
 
@@ -45,6 +46,12 @@ class CommentSerializer(serializers.ModelSerializer):
         if not user or not user.is_authenticated:
             return False
         return obj.likes.filter(user=user).exists()
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if instance.user:
+            rep['user'] = MiniUserSerializer(instance.user).data
+        return rep
 
 
 class PostSerializer(serializers.ModelSerializer):
