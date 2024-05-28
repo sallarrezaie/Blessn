@@ -1,6 +1,7 @@
 from .models import Feedback
 
 from rest_framework import serializers
+from users.serializers import UserSerializer
 
 
 class FeedbackSerializer(serializers.ModelSerializer):
@@ -12,3 +13,9 @@ class FeedbackSerializer(serializers.ModelSerializer):
             'email': {'required': False},
             'responded': {'required': False}
         }
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        if instance.user:
+            response['user'] = UserSerializer(instance.user).data
+        return response

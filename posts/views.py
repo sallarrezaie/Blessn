@@ -19,9 +19,11 @@ from .serializers import PostSerializer, CommentSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework.pagination import CursorPagination, PageNumberPagination
+from rest_framework.exceptions import ValidationError
 from home.permissions import IsGetOrIsAuthenticated
 
 from users.models import Follow
+from customadmin.utils import contains_banned_words
 
 
 class CustomPageNumberPagination(PageNumberPagination):
@@ -53,7 +55,13 @@ class PostViewSet(viewsets.ModelViewSet):
  
 
     def perform_create(self, serializer):
-        serializer.save(contributor=self.request.user.contributor)
+        title = serializer.validated_data.get('title', '')
+        if contains_banned_words(title):
+            raise ValidationError({"error": "Post title contains banned words."})
+
+        description = serializer.validated_data.get('description', '')
+        if contains_banned_words(description):
+            raise ValidationError({"error": "Post description contains banned words."})
 
     @action(detail=False, methods=['post'])
     def like(self, request):
@@ -176,13 +184,25 @@ class CommentViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['post']
 
+
     def perform_create(self, serializer):
         """
-        Assigns the user and optionally a parent comment during creation.
+        Assigns the user and optionally a parent comment during creation, while checking for banned words in the comment text.
         """
         user = self.request.user
+        text = serializer.validated_data.get('text', '')
+        
+        if contains_banned_words(text):
+            raise ValidationError("Comment contains banned words.")
+
         parent_comment_id = self.request.data.get("parent_comment")
-        parent_comment = Comment.objects.get(id=parent_comment_id) if parent_comment_id else None
+        parent_comment = None
+        if parent_comment_id:
+            try:
+                parent_comment = Comment.objects.get(id=parent_comment_id)
+            except Comment.DoesNotExist:
+                raise ValidationError({"parent_comment": "Invalid parent comment ID provided."})
+
         serializer.save(user=user, parent_comment=parent_comment)
 
     @action(detail=True, methods=['post'])

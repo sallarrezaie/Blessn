@@ -24,6 +24,7 @@ from .serializers import UserSerializer, ResetPasswordSerializer, CustomAuthToke
 from .models import Follow
 from contributors.models import Tag
 from contributors.serializers import TagSerializer
+from customadmin.utils import contains_banned_words
 
 
 User = get_user_model()
@@ -86,6 +87,7 @@ class UserViewSet(ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         token, created = Token.objects.get_or_create(user=serializer.instance)
+        send_otp(serializer.instance)
         return Response({'user': serializer.data, 'token': token.key}, status=status.HTTP_201_CREATED, headers=headers) 
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
@@ -158,6 +160,7 @@ class UserViewSet(ModelViewSet):
             user = serializer.validated_data['user']
             token = auth_token(user)
             user.otp_confirmed = True
+            user.is_email_verified = True
             user.save()
             serializer = UserSerializer(user, context={'request': request})
             return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_200_OK)
@@ -278,6 +281,8 @@ class UserViewSet(ModelViewSet):
     def add_tag(self, request):
         contributor = request.user.contributor
         tag_name = request.data.get('tag')
+        if contains_banned_words(tag_name):
+            return Response({"error": "Tag contains banned words"}, status=status.HTTP_400_BAD_REQUEST)
         tag, created = Tag.objects.get_or_create(name=tag_name)
         contributor.tags.add(tag)
         return Response({"status": "Tag added"}, status=status.HTTP_200_OK)

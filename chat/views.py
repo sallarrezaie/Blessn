@@ -13,6 +13,8 @@ from .serializers import ChatChannelSerializer, MyChatChannelSerializer
 from blessn.settings import PUBNUB_PUBLISH_KEY, PUBNUB_SUBSCRIBE_KEY
 from django_filters.rest_framework import DjangoFilterBackend
 
+from customadmin.utils import contains_banned_words
+
 User = get_user_model()
 
 
@@ -52,6 +54,10 @@ class ChatChannelViewSet(ModelViewSet):
         user = request.user
         sender_uuid = str(user.id)
         channel_id = request.data.get('channel')
+
+        if contains_banned_words(text):
+            return Response({"error": "Text contains banned words."}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             channel = ChatChannel.objects.get(id=channel_id)
         except ChatChannel.DoesNotExist:

@@ -12,7 +12,8 @@ from rest_framework.decorators import action
 
 from datetime import datetime
 
-from .serializers import RegistrationCountSerializer
+from .models import BannedWord
+from .serializers import RegistrationCountSerializer, BannedWordSerializer
 from users.serializers import AdminUserSerializer, UserSerializer
 from users.models import User
 from orders.models import Order
@@ -204,15 +205,29 @@ class AdminUserViewSet(ModelViewSet):
     @action(detail=False, methods=['get'])
     def orders(self, request):
         user_id = request.query_params.get('user_id')
+        role_type = request.query_params.get('role_type')
+
         if not user_id:
             return Response({"error": "user_id parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if role_type not in ['contributor', 'consumer']:
+            return Response({"error": "Invalid or missing role_type parameter. Choose 'contributor' or 'consumer'."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return Response({"error": "User does not exist."}, status=status.HTTP_400_BAD_REQUEST)
 
-        orders = Order.objects.filter(contributor=user.contributor)
+        if role_type == 'contributor':
+            if hasattr(user, 'contributor'):
+                orders = Order.objects.filter(contributor=user.contributor)
+            else:
+                return Response({"error": "This user does not have a contributor profile."}, status=status.HTTP_404_NOT_FOUND)
+        elif role_type == 'consumer':
+            if hasattr(user, 'consumer'):
+                orders = Order.objects.filter(consumer=user.consumer)
+            else:
+                return Response({"error": "This user does not have a consumer profile."}, status=status.HTTP_404_NOT_FOUND)
+
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
 
@@ -457,6 +472,21 @@ class AdminUserViewSet(ModelViewSet):
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['delete'])
+    def delete_category(self, request):
+        category_id = request.query_params.get('category_id')
+        if not category_id:
+            return Response({'error': 'Category ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            category = Category.objects.get(id=category_id)
+        except Category.DoesNotExist:
+            return Response({'error': 'Category does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+
+        category.delete()
+
+        return Response('Category deleted', status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['get'])
     def list_contributors_by_category(self, request):
         category_id = request.query_params.get('category_id')
@@ -485,6 +515,12 @@ class AdminUserViewSet(ModelViewSet):
             )
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AdminBannedWordViewSet(ModelViewSet):
+    serializer_class = BannedWordSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = BannedWord.objects.all()
 
 
 class AdminFeedbackViewSet(ModelViewSet):
@@ -542,3 +578,20 @@ class AdminFeedbackViewSet(ModelViewSet):
         feedback_ids = feedback_ids.split(',')
         Feedback.objects.filter(id__in=feedback_ids).update(admin_read=True)
         return Response({"message": "Feedbacks marked as read."}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'])
+    def delete_selected_feedback(self, request):
+        feedback_ids = request.query_params.get('feedback_ids')
+        if not feedback_ids:
+            return Response({"error": "feedback_ids parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        feedback_ids = feedback_ids.split(',')
+        Feedback.objects.filter(id__in=feedback_ids).delete()
+
+        return Response({"message": f"Deleted feedback(s)."}, status=status.HTTP_200_OK)
+
+
+class AdminCategoryViewSet(ModelViewSet):
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = Category.objects.all()

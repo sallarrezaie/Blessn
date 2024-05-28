@@ -9,6 +9,7 @@ class Tag(models.Model):
     name = models.CharField(max_length=100, unique=True)
     display = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name

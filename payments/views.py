@@ -18,6 +18,8 @@ from contributors.models import Contributor
 
 from dropdowns.models import Occasion
 
+from customadmin.utils import contains_banned_words
+
 from decimal import Decimal
 
 import stripe
@@ -84,6 +86,18 @@ class PaymentViewSet(ModelViewSet):
             turnaround = "Same Day"
         else:
             return Response({'detail': 'Invalid turnaround selected'}, status=status.HTTP_400_BAD_REQUEST)
+
+        video_for = request.data.get('video_for', '')
+        if contains_banned_words(video_for):
+            return Response({'detail': 'Video For contains a banned word.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        introduce_yourself = request.data.get('introduce_yourself', '')
+        if contains_banned_words(introduce_yourself):
+            return Response({'detail': 'Introduce Yourself contains a banned word.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        video_to_say = request.data.get('video_to_say', '')
+        if contains_banned_words(video_to_say):
+            return Response({'detail': 'Video To Say contains a banned word.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if request.data.get('occasion_id') is not None:
             occasion = Occasion.objects.get(id=request.data.get('occasion_id'))

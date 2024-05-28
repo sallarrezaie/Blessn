@@ -18,7 +18,8 @@ from payments.views import PaymentViewSet
 from orders.views import OrderViewSet
 from posts.views import PostViewSet, CommentViewSet
 from chat.views import ChatChannelViewSet
-from customadmin.views import RegistrationStats, RegistrationStatsProfiles, ApplicationActivityStats, AdminUserViewSet, AdminFeedbackViewSet
+from customadmin.views import RegistrationStats, RegistrationStatsProfiles, ApplicationActivityStats, AdminUserViewSet, AdminFeedbackViewSet, \
+    AdminCategoryViewSet, AdminBannedWordViewSet
 
 router = DefaultRouter()
 router.register("signup", SignupViewSet, basename="signup")
@@ -38,6 +39,8 @@ router.register("comments", CommentViewSet, basename='comments')
 router.register("chat", ChatChannelViewSet, basename="chat")
 router.register("admin/admin-users", AdminUserViewSet, basename="admin-users")
 router.register("admin/admin-feedbacks", AdminFeedbackViewSet, basename="admin-feedbacks")
+router.register("admin/admin-categories", AdminCategoryViewSet, basename="admin-categories")
+router.register("admin/admin-banned-words", AdminBannedWordViewSet, basename="admin-banned-words")
 
 urlpatterns = [
     path("", include(router.urls)),

@@ -5,6 +5,7 @@ from contributors.models import Contributor
 class Category(models.Model):
     name = models.CharField(max_length=255)
     picture = models.ImageField(upload_to="categories/pictures", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name_plural = "Categories"

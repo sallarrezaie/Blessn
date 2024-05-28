@@ -31,6 +31,7 @@ class User(AbstractUser):
     longitude = models.FloatField(blank=True, null=True)
     postal_code = models.CharField(max_length=255, blank=True)
     is_paused = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=False)
 
     # Notification Settings
     master_notification = models.BooleanField(default=True)

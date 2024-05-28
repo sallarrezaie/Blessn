@@ -85,7 +85,8 @@ LOCAL_APPS = [
     'orders',
     'payments',
     'posts',
-    'chat'
+    'chat',
+    'customadmin'
 ]
 THIRD_PARTY_APPS = [
     'rest_framework',

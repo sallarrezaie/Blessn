@@ -2,12 +2,14 @@ from django.contrib.auth import get_user_model
 from django.db.models import Avg, Sum
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from .models import Contributor, ContributorPhotoVideo, Tag
 from categories.serializers import CategorySerializer
 
 from blessn.settings import BOOKING_FEE
 from users.models import Follow
+from customadmin.utils import contains_banned_words
 
 
 User = get_user_model()
@@ -36,6 +38,16 @@ class ContributorPhotoVideoSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {'contributor': {'required': False}}
 
+    def validate_title(self, value):
+        if contains_banned_words(value):
+            raise ValidationError("Title contains banned words.")
+        return value
+
+    def validate_description(self, value):
+        if contains_banned_words(value):
+            raise ValidationError("Description contains banned words.")
+        return value
+
 
 class ContributorSerializer(serializers.ModelSerializer):
     photos_videos = ContributorPhotoVideoSerializer(many=True, required=False)
@@ -48,12 +60,13 @@ class ContributorSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         photos_videos_data = validated_data.pop('photos_videos', None)
         contributor = super().update(instance, validated_data)
+
         if photos_videos_data is not None:
-            for photo_video in photos_videos_data:
-                ContributorPhotoVideo.objects.create(
-                        **photo_video,
-                        contributor=contributor
-                    )
+            for photo_video_data in photos_videos_data:
+                photo_video_serializer = ContributorPhotoVideoSerializer(data=photo_video_data)
+                if photo_video_serializer.is_valid(raise_exception=True):
+                    photo_video_serializer.save(contributor=contributor)
+                    
         return contributor
 
     def to_representation(self, instance):
