@@ -1,0 +1,28 @@
+{
+  "files": {
+    "main.css": "/static/css/main.25ef263f.css",
+    "main.js": "/static/js/main.2027230d.js",
+    "static/js/787.d1d4a2c2.chunk.js": "/static/js/787.d1d4a2c2.chunk.js",
+    "static/media/post1.png": "/static/media/post1.2f212889ee96b981b6d3.png",
+    "static/media/profile-1.png": "/static/media/profile-1.acb8ad8628480899c22d.png",
+    "static/media/chart.png": "/static/media/chart.7603234a92f3f4ff3cf3.png",
+    "static/media/background.png": "/static/media/background.cd9418c2566ff585dca9.png",
+    "static/media/profile-admin.png": "/static/media/profile-admin.c2d04ae2f71617864c42.png",
+    "static/media/avatar.png": "/static/media/avatar.81e16be9d93b8af31f60.png",
+    "static/media/blessn-logo.png": "/static/media/blessn-logo.734234271fe79c4002f5.png",
+    "static/media/messageFill.svg": "/static/media/messageFill.b270daa2d93bec819b06b17e7e3e5551.svg",
+    "static/media/message.svg": "/static/media/message.d489d2755ce06a23a2f497b2350417eb.svg",
+    "static/media/user-inactive.svg": "/static/media/user-inactive.77c42e974e11af3dcb1d729c2de99aa6.svg",
+    "index.html": "/index.html",
+    "static/media/category.svg": "/static/media/category.cb3480c9fb845eb7b46320831e00a242.svg",
+    "static/media/categoryFill.svg": "/static/media/categoryFill.0c93f8c50f3ff139a72055c9bb0c5dcd.svg",
+    "static/media/messageicon.svg": "/static/media/messageicon.0b7b3a71cbc96c6b8b7e687e97d5ead4.svg",
+    "main.25ef263f.css.map": "/static/css/main.25ef263f.css.map",
+    "main.2027230d.js.map": "/static/js/main.2027230d.js.map",
+    "787.d1d4a2c2.chunk.js.map": "/static/js/787.d1d4a2c2.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.25ef263f.css",
+    "static/js/main.2027230d.js"
+  ]
+}
