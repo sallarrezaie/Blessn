@@ -328,3 +328,7 @@ DJSTRIPE_WEBHOOK_SECRET = env.str("DJSTRIPE_WEBHOOK_SECRET", "")
 
 PUBNUB_PUBLISH_KEY = env.str("PUBNUB_PUBLISH_KEY", "")
 PUBNUB_SUBSCRIBE_KEY = env.str("PUBNUB_SUBSCRIBE_KEY", "")
+
+CELERY_BROKER_URL = env.str("REDIS_URL", "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = env.str("REDIS_URL", "redis://redis:6379/0")
+REDIS_URL = env.str("REDIS_URL", "redis://redis:6379/0")

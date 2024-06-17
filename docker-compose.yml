@@ -9,3 +9,16 @@ services:
     image: postgres:12
   redis:
     image: redis:5
+    ports:
+      - "6379:6379"
+  celery:
+    build: .
+    command: celery -A blessn worker --loglevel=INFO
+    depends_on:
+      - web
+      - redis
+      - postgres
+    env_file:
+      - .env
+    volumes:
+      - ./:/opt/webapp

@@ -152,6 +152,7 @@ class Order(models.Model):
     rating = models.IntegerField(
         default=0
     )
+    video_processing = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         self.total = self.video_fee + self.booking_fee

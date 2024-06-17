@@ -21,6 +21,11 @@ services:
   redis:
     ports:
       - "6379:6379"
+  celery:
+    build:
+      context: .
+      args:
+        SECRET_KEY: ${SECRET_KEY}
 
 volumes: 
   postgres-data:

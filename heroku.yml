@@ -8,3 +8,9 @@ release:
   image: web
   command:
     - python3 manage.py migrate
+
+run:
+  worker:
+    command:
+      - celery -A blessn worker --loglevel=info
+    image: web
