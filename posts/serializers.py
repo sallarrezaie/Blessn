@@ -65,7 +65,11 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ('id', 'contributor', 'title', 'description', 'created_at', 'post_files', 'likes_count', 
                   'is_liked_by_user', 'top_level_comments', 'comments_count')
-
+        extra_kwargs = {
+            "contributor": {
+                "required": False
+            }
+        }
 
     def create(self, validated_data):
         post_files_data = validated_data.pop('post_files', None)

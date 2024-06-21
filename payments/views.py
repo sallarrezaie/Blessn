@@ -175,14 +175,11 @@ class PaymentViewSet(ModelViewSet):
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
                 
-        # Sync with djstripe models
-        dj_consumer_payment_intent = djstripe.models.PaymentIntent.sync_from_stripe_data(consumer_payment_intent)
 
         Payment.objects.create(
             order=order,
             consumer=request.user.consumer,
             amount=order.total,
-            consumer_payment_intent=dj_consumer_payment_intent,
             payment_method=dj_payment_method,
         )
         order.status = 'In Progress'

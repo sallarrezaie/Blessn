@@ -63,6 +63,8 @@ class PostViewSet(viewsets.ModelViewSet):
         if contains_banned_words(description):
             raise ValidationError({"error": "Post description contains banned words."})
 
+        serializer.save(contributor=self.request.user.contributor) 
+
     @action(detail=False, methods=['post'])
     def like(self, request):
         post = Post.objects.get(id=request.data.get("post"))

@@ -6,6 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from .serializers import OrderSerializer
 from .models import Order, Review
+from .filters import OrderFilter
+
 from chat.models import ChatChannel, ChatMessage
 
 from payments.models import Payment
@@ -29,8 +31,7 @@ class OrderViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated,)
     queryset = Order.objects.all().order_by('-created_at')
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ['consumer', 'contributor', 'status', 'archived']
-
+    filterset_class = OrderFilter
 
     @action(detail=False, methods=['post'])
     def mark_as_delivered(self, request):
