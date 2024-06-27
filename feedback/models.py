@@ -3,6 +3,7 @@ from django.db import models
 from users.models import User
 
 
+# released
 class Feedback(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedback')
     email = models.CharField(max_length=255, blank=True)
