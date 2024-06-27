@@ -1,5 +1,5 @@
-from allauth.account.models import EmailAddress
 from django.core.management.base import BaseCommand, CommandParser
+from users.models import User
 
 
 class Command(BaseCommand):
@@ -16,18 +16,18 @@ class Command(BaseCommand):
         email = kwargs.get("email")
         if email:
             try:
-                email_address = EmailAddress.objects.get(
+                user = User.objects.get(
                     email=email
                 )
-                email_address.user.is_superuser = True
-                email_address.user.is_staff = True
-                email_address.user.save()
+                user.is_superuser = True
+                user.is_staff = True
+                user.save()
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"Successfully upgraded user {email} to superuser."
                     )
                 )
-            except EmailAddress.DoesNotExist:
+            except User.DoesNotExist:
                 self.stdout.write(self.style.ERROR(f"User {email} does not exist or not active or verified"))
         else:
             self.stdout.write(self.style.ERROR(f"No email address provided."))
