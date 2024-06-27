@@ -17,8 +17,8 @@ class Command(BaseCommand):
         if email:
             try:
                 email_address = EmailAddress.objects.get(
-                    email=email, verified=True, user__is_active=True
-                )  # only upgrade verified and active user
+                    email=email
+                )
                 email_address.user.is_superuser = True
                 email_address.user.is_staff = True
                 email_address.user.save()
